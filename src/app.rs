@@ -8,6 +8,7 @@ use crate::pages::home::*;
 
 // components
 use crate::components::footer::*;
+use crate::components::nav::*;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -33,6 +34,7 @@ pub fn App() -> impl IntoView {
             }
             .into_view()
         }>
+            <Header/>
             <main>
                 <Routes>
                     <Route path="/" view=|| view ! {<Home/>}/>
