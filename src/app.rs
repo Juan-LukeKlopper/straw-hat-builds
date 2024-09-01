@@ -3,7 +3,11 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
+// Pages
 use crate::pages::home::*;
+
+// components
+use crate::components::footer::*;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -34,6 +38,7 @@ pub fn App() -> impl IntoView {
                     <Route path="/" view=|| view ! {<Home/>}/>
                 </Routes>
             </main>
+            <Footer/>
         </Router>
     }
 }
