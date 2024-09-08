@@ -7,7 +7,7 @@ pub fn Header() -> impl IntoView {
     view! {
         <header class="relative z-50">
             <nav
-                class="mx-auto flex w-full items-center justify-between p-6 lg:px-8 bg-gray-900"
+                class="mx-auto flex w-full items-center justify-between p-6 lg:px-8 bg-gray-950"
                 aria-label="Global"
             >
                 <a href="/" class="-m-1.5 p-1.5">
