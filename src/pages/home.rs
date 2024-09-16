@@ -1,15 +1,16 @@
+use crate::components::post::*;
 use leptos::*;
 
 /// Renders the home page of your application.
 #[component]
 pub fn Home() -> impl IntoView {
-    // Creates a reactive value to update the button
-    let (count, set_count) = create_signal(0);
-    let on_click = move |_| set_count.update(|count| *count += 1);
-
     view! {
+        <div class="w-full bg-gradient-to-r from-purple-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% p-8 text-center ">
+        <div class="max-w-8xl mx-auto p-8 my-8 text-gray-100 border-2 border-black rounded ring ring-offset-2 ring-slate-900 bg-slate-900 text-lg text-justify">
         <h1>"Welcome to StrawHatBuilds!"</h1>
-        <p>"We are builders who want to help you get your projects into production!"</p>
-        <button on:click=on_click>"Click Me: " {count}</button>
+        <p>"Gaze apon all of the treasure maps we have collected!"</p>
+        <Posts/>
+        </div>
+        </div>
     }
 }
