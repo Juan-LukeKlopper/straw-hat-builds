@@ -14,7 +14,7 @@ pub fn Header() -> impl IntoView {
                     <span class="sr-only">"StrawHatBuilds"</span>
                     <img
                         class="h-8 w-auto rounded-full"
-                        src="Luffy_Default_Icon.jpeg"
+                        src="Default_Icon.jpeg"
                         alt="avatar"
                         width="64"
                         height="64"
