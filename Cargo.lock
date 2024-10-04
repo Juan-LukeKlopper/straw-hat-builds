@@ -1742,6 +1742,8 @@ dependencies = [
  "leptos_meta",
  "leptos_router",
  "pulldown-cmark",
+ "serde",
+ "serde_derive",
  "thiserror",
  "tokio",
  "tower",
