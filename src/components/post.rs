@@ -7,21 +7,6 @@ pub struct Project {
     pub description: String,
 }
 
-#[server(AddTodo, "/api")]
-pub async fn add_todo(title: String) -> Result<(), ServerFnError> {
-    use pulldown_cmark::{Options, Parser};
-    let markdown_input = "Hello world, this is a ~~complicated~~ *very simple* example.";
-    let mut options = Options::empty();
-    options.insert(Options::ENABLE_STRIKETHROUGH);
-    let parser = Parser::new_ext(markdown_input, options);
-    let mut html_output = String::new();
-    pulldown_cmark::html::push_html(&mut html_output, parser);
-
-    println!("title: {:?}", title);
-    println!("html_output: {:?}", html_output);
-    Ok(())
-}
-
 #[server(GetAvailablePosts, "/api")]
 pub async fn get_available_posts() -> Result<Vec<Project>, ServerFnError> {
     use std::fs;
