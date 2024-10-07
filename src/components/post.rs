@@ -63,7 +63,7 @@ pub async fn get_available_posts() -> Result<Vec<Project>, ServerFnError> {
 
 #[component]
 pub fn Posts() -> impl IntoView {
-    let (posts, set_posts) = create_signal(vec!["".to_string()]);
+    let (posts, _set_posts) = create_signal(vec!["".to_string()]);
 
     let async_projects = create_resource(
         // the first is the "source signal"
@@ -71,7 +71,7 @@ pub fn Posts() -> impl IntoView {
         // the second is the loader
         // it takes the source signal's value as its argument
         // and does some async work
-        |value| async move { get_available_posts().await.unwrap() },
+        |_value| async move { get_available_posts().await.unwrap() },
     );
 
     let async_result = move || {
@@ -107,7 +107,7 @@ pub fn Posts() -> impl IntoView {
     };
 
     let loading = async_projects.loading();
-    let is_loading = move || if loading() { "Loading..." } else { "Idle." };
+    let _is_loading = move || if loading() { "Loading..." } else { "Idle." };
 
     view! {
         <div>
