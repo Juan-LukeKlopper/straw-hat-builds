@@ -5,6 +5,7 @@ use leptos_router::*;
 
 // Pages
 use crate::pages::about::*;
+use crate::pages::builds::*;
 use crate::pages::home::*;
 use crate::pages::projects::*;
 
@@ -40,7 +41,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes>
                     <Route path="/" view=|| view ! {<Home/>}/>
-                    <Route path="/builds" view=|| view ! {<Home/>}/>
+                    <Route path="/builds" view=|| view ! {<Builds/>}/>
                     <Route path="/about" view=|| view ! {<About/>}/>
                     <Route path="/builds/:project_name/:section_num/:chapter_num" view=Project/>
                 </Routes>

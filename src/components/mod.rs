@@ -1,4 +1,4 @@
+pub mod builds_list;
 pub mod footer;
 pub mod nav;
-pub mod post;
 pub mod project;
