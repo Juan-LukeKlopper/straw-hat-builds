@@ -7,6 +7,38 @@ pub struct Build {
     pub description: String,
 }
 
+#[server(Test, "/api")]
+pub async fn test() -> Result<(), ServerFnError> {
+    use dotenv::dotenv;
+    use sqlx::postgres::PgPoolOptions;
+    use std::env;
+
+    // Load environment variables from the .env file
+    dotenv().ok();
+
+    // Get the DATABASE_URL from the environment
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    // Print the database URL to verify
+    println!("Connecting to database with URL: {}", database_url);
+
+    // Create a PostgreSQL connection pool
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&database_url)
+        .await?;
+
+    // Connection is successful, proceed with your queries
+    println!("Successfully connected to the database");
+
+    // Explicitly close the pool when done
+    pool.close().await;
+
+    println!("Disconnected from the database");
+
+    Ok(())
+}
+
 #[server(GetAvailableBuilds, "/api")]
 pub async fn get_available_builds() -> Result<Vec<Build>, ServerFnError> {
     use std::fs;
@@ -55,7 +87,10 @@ pub fn builds_list() -> impl IntoView {
         // the second is the loader
         // it takes the source signal's value as its argument
         // and does some async work
-        |_value| async move { get_available_builds().await.unwrap() },
+        |_value| async move {
+            let _ = test().await;
+            get_available_builds().await.unwrap()
+        },
     );
 
     let list_of_builds = move || {
