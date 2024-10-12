@@ -15,3 +15,8 @@ playwright/.cache/
 
 /content/
 content/
+
+milestones.md
+progress.md
+prompt.md
+.env
