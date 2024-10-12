@@ -23,6 +23,12 @@ wasm-bindgen = "=0.2.93"
 thiserror = "1"
 tracing = { version = "0.1", optional = true }
 http = "1"
+leptos-use = "0.13.5"
+dotenv = "0.15.0"
+sqlx = { version = "0.8.2", features = [
+	"runtime-tokio-rustls",
+	"postgres",
+], optional = true }
 
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
@@ -32,6 +38,7 @@ ssr = [
     "dep:tower",
     "dep:tower-http",
     "dep:leptos_axum",
+    "dep:sqlx",
     "leptos/ssr",
     "leptos_meta/ssr",
     "leptos_router/ssr",
