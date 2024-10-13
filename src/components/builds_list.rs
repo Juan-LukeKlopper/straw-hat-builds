@@ -109,7 +109,7 @@ pub fn builds_list() -> impl IntoView {
 
                                 <div class="w-1/2 p-12 flex flex-col justify-center text-center bg-black text-white">
                                     <h2 class="mb-4 text-4xl font-semibold">{&build.name}</h2>
-                                    <h4 class="mb-6 text-xl font-semibold">{&build.description}</h4>
+                                    <h3 class="mb-6 text-xl font-semibold">{&build.description}</h3>
                                     <button
                                       type="button"
                                       class="inline-block rounded border-2 border-neutral-50 px-6 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
