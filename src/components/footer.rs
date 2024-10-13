@@ -28,7 +28,7 @@ pub fn Footer() -> impl IntoView {
                 </svg>
               </div>
 
-              <p class="max-w-xs mt-4 text-sm text-gray-600">
+              <p class="max-w-xs mt-4 text-sm text-gray-400">
                 We are <s>Builders</s> Pirates who want to help your projects set sail into the wild waters of production!
               </p>
 
@@ -78,13 +78,13 @@ pub fn Footer() -> impl IntoView {
                 <p class="font-medium text-gray-200">
                   Builds
                 </p>
-                <nav class="flex flex-col mt-4 space-y-2 text-sm text-gray-500">
-                  <a class="hover:opacity-75" href> Secret Network NFT project </a>
+                <nav class="flex flex-col mt-4 space-y-2 text-sm text-gray-400">
+                  <a class="hover:text-gray-300" href> Secret Network NFT project </a>
                 </nav>
               </div>
             </div>
           </div>
-          <p class="mt-8 text-xs text-gray-800">
+          <p class="mt-8 text-xs text-gray-100">
            2024 StrawHatBuilds
           </p>
         </div>
