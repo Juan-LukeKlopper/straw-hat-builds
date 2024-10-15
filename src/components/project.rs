@@ -1,6 +1,15 @@
 use leptos::*;
+use leptos_dom::logging::console_log;
 use leptos_router::*;
 use serde::{Deserialize, Serialize};
+
+
+use web_sys::{js_sys, wasm_bindgen::JsValue};
+use wasm_bindgen::prelude::*;
+use web_sys::{window, console};
+use js_sys::Promise;
+use wasm_bindgen_futures::JsFuture;
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Chapter {
@@ -18,8 +27,49 @@ struct ProjectParams {
     chapter_num: u8,
 }
 
+async fn get_keplr_address() -> Result<String, JsValue> {
+    let window = window().unwrap();
+
+    // Check if Keplr is available in the browser
+    if let Some(keplr) = js_sys::Reflect::get(&window, &JsValue::from_str("keplr")).ok() {
+        if keplr.is_undefined() {
+            return Err(JsValue::from_str("Keplr extension not found!"));
+        }
+
+        // Enable Keplr for the chain
+        let chain_id = "secret-4"; // Replace with your chain ID
+        let enable_method = js_sys::Reflect::get(&keplr, &JsValue::from_str("enable")).unwrap();
+        let enable_promise: Promise = enable_method
+            .dyn_into::<js_sys::Function>()
+            .unwrap()
+            .call1(&keplr, &JsValue::from_str(chain_id))
+            .unwrap()
+            .into();
+        JsFuture::from(enable_promise).await?;
+
+        // Get Keplr key (which contains the user's address)
+        let get_key_method = js_sys::Reflect::get(&keplr, &JsValue::from_str("getKey")).unwrap();
+        let key_promise: Promise = get_key_method
+            .dyn_into::<js_sys::Function>()
+            .unwrap()
+            .call1(&keplr, &JsValue::from_str(chain_id))
+            .unwrap()
+            .into();
+        let key_jsvalue = JsFuture::from(key_promise).await?;
+
+        // Extract the Bech32 address from the key object
+        let bech32_address = js_sys::Reflect::get(&key_jsvalue, &JsValue::from_str("bech32Address")).unwrap();
+        let address = bech32_address.as_string().unwrap_or_default();
+
+        Ok(address)
+    } else {
+        Err(JsValue::from_str("Keplr extension not available!"))
+    }
+}
+
 #[server(Test, "/api")]
-pub async fn test() -> Result<(), ServerFnError> {
+pub async fn test(address: String, build: String) -> Result<(), ServerFnError> {
+    print!("TEST");
     use dotenv::dotenv;
     use sqlx::postgres::PgPoolOptions;
     use std::env;
@@ -174,7 +224,51 @@ let chapter_num = create_memo(move |_| {
         },
     );
 
+
+
+
+    let done_handler = move |_| {
+    let project_name = project_name();
+    if cfg!(target_arch = "wasm32") {
+        spawn_local(async move {
+            match get_keplr_address().await {
+                Ok(address) => {
+                    console::log_1(&JsValue::from_str(&format!("Keplr address: {}", address)));
+                    test(address, project_name).await;
+
+                }
+                Err(e) => {
+                    console::error_1(&e);
+                }
+            }
+        });
+    }
+};
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     let async_chapter = move || {
         async_chapters
@@ -211,8 +305,9 @@ let chapter_num = create_memo(move |_| {
                                         <button
                                             type="button"
                                             class="inline-block rounded border-2 border-neutral-50 px-6 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
+                                            on:click=done_handler
                                         >
-                                            Done!
+                                            Claim NFT!
                                         </button>
                                     }
 
