@@ -61,7 +61,8 @@ async fn get_keplr_address() -> Result<String, JsValue> {
         let key_jsvalue = JsFuture::from(key_promise).await?;
 
         // Extract the Bech32 address from the key object
-        let bech32_address = js_sys::Reflect::get(&key_jsvalue, &JsValue::from_str("bech32Address")).unwrap();
+        let bech32_address =
+            js_sys::Reflect::get(&key_jsvalue, &JsValue::from_str("bech32Address")).unwrap();
         let address = bech32_address.as_string().unwrap_or_default();
 
         Ok(address)
@@ -181,49 +182,89 @@ pub async fn get_project_chapter(
         num: chapter_num,
         final_chapter: final_c,
         final_section: final_s,
+        tweet: tweet_body,
     };
 
     Ok(res)
 }
 
+#[server(GetTweetMessage, "/tweet")]
+pub async fn get_section_tweet(
+    project_name: String,
+    section_num: u8,
+) -> Result<Tweet, ServerFnError> {
+    use pulldown_cmark::{Options, Parser};
+    use std::fs;
+    use std::path::PathBuf;
+
+    let mut tweet_text = String::from("");
+    let mut file_name = String::from("");
+
+    let current_chapter_path = format!("./content/{}/section_{}/", project_name, section_num,);
+
+    // Search for any file in the current chapter directory
+    if let Ok(entries) = fs::read_dir(&current_chapter_path) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                if let Some(fname) = path.file_name().and_then(|f| f.to_str()) {
+                    file_name = fname.to_string();
+                    if let Ok(content) = fs::read_to_string(&path) {
+                        tweet_text = content;
+                    }
+                }
+                break; // Stop after the first file is found
+            }
+        }
+    }
+
+    // Return the chapter details
+    let res = Tweet { body: tweet_text };
+
+    println!("Tweet = {:?}", res);
+    Ok(res)
+}
 
 #[component]
-pub fn Project_output() -> impl IntoView {
-        // Use reactive signals that will cause the resource to refetch on parameter change
+pub fn project_output() -> impl IntoView {
+    // Use reactive signals that will cause the resource to refetch on parameter change
     let (chapter, _set_posts) = create_signal(Chapter {
         name: String::from(""),
         text: String::from(""),
         num: 0,
         final_section: true,
         final_chapter: true,
+        tweet: None,
     });
-
 
     let params = use_params::<ProjectParams>();
 
     let project_name = create_memo(move |_| {
-    params.with(|params| {
-        params.as_ref()
-            .map(|params| params.project_name.clone())
-            .unwrap_or_default()
-    })
-});
+        params.with(|params| {
+            params
+                .as_ref()
+                .map(|params| params.project_name.clone())
+                .unwrap_or_default()
+        })
+    });
 
-let section_num = create_memo(move |_| {
-    params.with(|params| {
-        params.as_ref()
-            .map(|params| params.section_num)
-            .unwrap_or_default()
-    })
-});
+    let section_num = create_memo(move |_| {
+        params.with(|params| {
+            params
+                .as_ref()
+                .map(|params| params.section_num)
+                .unwrap_or_default()
+        })
+    });
 
-let chapter_num = create_memo(move |_| {
-    params.with(|params| {
-        params.as_ref()
-            .map(|params| params.chapter_num)
-            .unwrap_or_default()
-    })
-});
+    let chapter_num = create_memo(move |_| {
+        params.with(|params| {
+            params
+                .as_ref()
+                .map(|params| params.chapter_num)
+                .unwrap_or_default()
+        })
+    });
 
     // Refetch data based on reactive params
     let async_chapters = create_resource(
