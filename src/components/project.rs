@@ -1,15 +1,12 @@
 use leptos::*;
-use leptos_dom::logging::console_log;
 use leptos_router::*;
 use serde::{Deserialize, Serialize};
 
-
-use web_sys::{js_sys, wasm_bindgen::JsValue};
-use wasm_bindgen::prelude::*;
-use web_sys::{window, console};
 use js_sys::Promise;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
-
+use web_sys::{console, window};
+use web_sys::{js_sys, wasm_bindgen::JsValue};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Chapter {
@@ -18,6 +15,12 @@ pub struct Chapter {
     pub num: u8,
     pub final_chapter: bool,
     pub final_section: bool,
+    pub tweet: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Tweet {
+    pub body: String,
 }
 
 #[derive(Params, PartialEq)]
@@ -148,7 +151,6 @@ pub async fn get_project_chapter(
         }
     }
 
-
     // Check for the existence of the next chapter and section
     if let Ok(_) = fs::read_dir(next_chapter_path) {
         final_c = false;
@@ -158,12 +160,19 @@ pub async fn get_project_chapter(
         final_s = false;
     }
 
+    let mut tweet_body: Option<String> = None;
     // Convert markdown to HTML
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
     let parser = Parser::new_ext(&chapter_text, options);
     let mut html_output = String::new();
     pulldown_cmark::html::push_html(&mut html_output, parser);
+
+    if final_c {
+        if let Ok(tweet) = get_section_tweet(project_name, section_num).await {
+            tweet_body = Some(tweet.body);
+        }
+    }
 
     // Return the chapter details
     let res = Chapter {
@@ -224,51 +233,22 @@ let chapter_num = create_memo(move |_| {
         },
     );
 
-
-
-
     let done_handler = move |_| {
-    let project_name = project_name();
-    if cfg!(target_arch = "wasm32") {
-        spawn_local(async move {
-            match get_keplr_address().await {
-                Ok(address) => {
-                    console::log_1(&JsValue::from_str(&format!("Keplr address: {}", address)));
-                    test(address, project_name).await;
-
+        let project_name = project_name();
+        if cfg!(target_arch = "wasm32") {
+            spawn_local(async move {
+                match get_keplr_address().await {
+                    Ok(address) => {
+                        console::log_1(&JsValue::from_str(&format!("Keplr address: {}", address)));
+                        test(address, project_name).await;
+                    }
+                    Err(e) => {
+                        console::error_1(&e);
+                    }
                 }
-                Err(e) => {
-                    console::error_1(&e);
-                }
-            }
-        });
-    }
-};
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            });
+        }
+    };
 
     let async_chapter = move || {
         async_chapters
@@ -278,40 +258,163 @@ let chapter_num = create_memo(move |_| {
                     <div class="container mx-auto px-5 py-2 lg:px-32 lg:pt-12 space-y-6">
                         <h2 class="mb-4 text-4xl font-semibold">{&chapter.name}</h2>
                         <div class="project" inner_html=&chapter.text></div>
-                            {if chapter.final_chapter != true {
+
+
+                            {if section_num() != 0 {
+                                view!{
+                                    <a href={format!("/builds/{}/{}/{}", &project_name(), &section_num().saturating_sub(1), 1)}>
+                                        <button
+                                            type="button"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 ml-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
+                                        >
+                                            Previous Section
+                                        </button>
+                                    </a>
+                                }
+                            }else{
+                                view!{
+                                    <a>
+                                        <button
+                                            type="button"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 ml-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-900 hover:text-gray-900 focus:border-neutral-300  dark:hover:bg-neutral-900 dark:focus:bg-neutral-600"
+                                            disabled
+                                        >
+                                            Previous Section
+                                        </button>
+                                    </a>
+                                }
+                            }}
+
+
+
+
+
+                            {if chapter.num != 1 {
+                                view!{
+                                    <a href={format!("/builds/{}/{}/{}", &project_name(), &section_num(), &chapter.num.saturating_sub(1))}>
+                                        <button
+                                            type="button"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
+                                        >
+                                            Previous Chapter
+                                        </button>
+                                    </a>
+                                }
+                            }else{
+                                view!{
+                                    <a>
+                                        <button
+                                            type="button"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-900 hover:text-gray-900  dark:hover:bg-neutral-900 dark:focus:bg-neutral-600"
+                                            disabled
+                                        >
+                                            Previous Chapter
+                                        </button>
+                                    </a>
+                                }
+                            }}
+
+
+
+
+
+                            {if chapter.tweet != None {
                                 view!{
                                     <button
                                         type="button"
-                                        class="inline-block rounded border-2 border-neutral-50 px-6 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
+                                        class="inline-block rounded border-2 border-neutral-50 px-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
                                     >
-                                    <a href={format!{"/builds/{}/{}/{}",&project_name(), &section_num(), &chapter.num+1}}>
-                                        Next Chapter
+                                    <a href={format!{"https://twitter.com/intent/tweet?text={}", &chapter.tweet.unwrap()}}>
+                                        Build in public!
                                     </a>
                                     </button>
                                 }
-                            }else if chapter.final_section != true {
-                                    view!{
+                            }else {
+                                    view! {
                                         <button
                                             type="button"
-                                            class="inline-block rounded border-2 border-neutral-50 px-6 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
                                         >
-                                            <a href={format!{"/builds/{}/{}/{}",&project_name(), &section_num()+1, 1}}>
-                                                Next Section
+                                            <a href="https://twitter.com/intent/tweet?text=Hey guys! Check out Straw Hat Builds, they are motivating me to get my projects off localhost!">
+                                                Tweet about straw hat builds!
                                             </a>
                                         </button>
                                     }
-                            }else {
-                                    view!{
+                            }}
+
+
+
+
+                                                 {if chapter.final_chapter != true {
+                                view!{
+                                    <a href={format!("/builds/{}/{}/{}", &project_name(), &section_num(), &chapter.num + 1)}>
                                         <button
                                             type="button"
-                                            class="inline-block rounded border-2 border-neutral-50 px-6 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
+                                        >
+                                            Next Chapter
+                                        </button>
+                                    </a>
+                                }
+                            }else{
+                                view!{
+                                    <a>
+                                        <button
+                                            type="button"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-900 hover:text-gray-900  dark:hover:bg-neutral-900"
+                                        >
+                                            Next Chapter
+                                        </button>
+                                    </a>
+                                }
+                            }}
+
+
+
+
+                            {if chapter.final_section != true {
+                                view!{
+                                    <a href={format!("/builds/{}/{}/{}", &project_name(), &section_num() + 1, 1)}>
+                                        <button
+                                            type="button"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
+                                        >
+                                            Next Section
+                                        </button>
+                                    </a>
+                                }
+                            }else if chapter.final_chapter != true{
+                                view!{
+                                    <a>
+                                        <button
+                                            type="button"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-900 hover:text-gray-900 dark:hover:bg-neutral-900 dark:focus:bg-neutral-600"
+                                            disabled
+                                        >
+                                            Next Section
+                                        </button>
+                                    </a>
+                                }
+                            }else {
+
+                            view!{
+                                <a>
+                                         <button
+                                            type="button"
+                                            class="inline-block rounded border-2 border-neutral-50 px-6 mx-3 pb-[6px] pt-2 text-xs font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-300 hover:text-neutral-200 focus:border-neutral-300 focus:text-neutral-200 focus:outline-none focus:ring-0 active:border-neutral-300 active:text-neutral-200 dark:hover:bg-neutral-600 dark:focus:bg-neutral-600"
                                             on:click=done_handler
                                         >
                                             Claim NFT!
-                                        </button>
-                                    }
+                                         </button>
+                                </a>
+                            }}}
 
-                            }} 
+
+
+
+
+
+
                     </div>
                 }
             })
@@ -328,4 +431,3 @@ let chapter_num = create_memo(move |_| {
         </div>
     }
 }
-
