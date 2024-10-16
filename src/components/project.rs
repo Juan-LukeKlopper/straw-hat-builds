@@ -102,6 +102,24 @@ pub async fn test(address: String, build: String) -> Result<(), ServerFnError> {
     // Connection is successful, proceed with your queries
     println!("Successfully connected to the database");
 
+    // Try insert data
+    let result = sqlx::query!(
+        r#"
+        INSERT INTO cohorts (address, build, tx_hash)
+        VALUES ($1, $2, NULL)
+        "#,
+        address,
+        build
+    )
+    .execute(&pool)
+    .await;
+
+    // Print out result of insertion
+    match result {
+        Ok(_) => println!("Data inserted successfully"),
+        Err(e) => println!("Failed to insert data: {:?}", e),
+    }
+
     // Explicitly close the pool when done
     pool.close().await;
 
