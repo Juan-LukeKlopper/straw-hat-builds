@@ -5,10 +5,9 @@ use serde::{Deserialize, Serialize};
 use js_sys::Promise;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
+use web_sys::MouseEvent;
 use web_sys::{console, window};
 use web_sys::{js_sys, wasm_bindgen::JsValue};
-
-use web_sys::MouseEvent;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Chapter {
@@ -73,13 +72,8 @@ async fn get_keplr_address() -> Result<String, JsValue> {
     }
 }
 
-#[server(Test, "/api")]
-pub async fn test(address: String, build: String) -> Result<(), ServerFnError> {
-    print!("TEST");
-    println!(
-        "args.address = {:?}\n\nargs.build = {:?}\n\n",
-        address, build
-    );
+#[server(AddCompletionToDB, "/complete")]
+pub async fn add_completion_to_db(address: String, build: String) -> Result<(), ServerFnError> {
     use dotenv::dotenv;
     use sqlx::postgres::PgPoolOptions;
     use std::env;
@@ -90,17 +84,11 @@ pub async fn test(address: String, build: String) -> Result<(), ServerFnError> {
     // Get the DATABASE_URL from the environment
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    // Print the database URL to verify
-    println!("Connecting to database with URL: {}", database_url);
-
     // Create a PostgreSQL connection pool
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&database_url)
         .await?;
-
-    // Connection is successful, proceed with your queries
-    println!("Successfully connected to the database");
 
     // Try insert data
     let result = sqlx::query!(
@@ -116,14 +104,12 @@ pub async fn test(address: String, build: String) -> Result<(), ServerFnError> {
 
     // Print out result of insertion
     match result {
-        Ok(_) => println!("Data inserted successfully"),
-        Err(e) => println!("Failed to insert data: {:?}", e),
+        Ok(_) => println!("\nData inserted successfully\n"),
+        Err(e) => println!("\nFailed to insert data: {:?}\n", e),
     }
 
     // Explicitly close the pool when done
     pool.close().await;
-
-    println!("Disconnected from the database");
 
     Ok(())
 }
@@ -246,7 +232,6 @@ pub async fn get_section_tweet(
     // Return the chapter details
     let res = Tweet { body: tweet_text };
 
-    println!("Tweet = {:?}", res);
     Ok(res)
 }
 
@@ -313,14 +298,14 @@ pub fn project_output() -> impl IntoView {
                 match get_keplr_address().await {
                     Ok(address) => {
                         console::log_1(&JsValue::from_str(&format!("Keplr address: {}", address)));
-                        let result = test(address, project_name).await;
+                        let result = add_completion_to_db(address, project_name).await;
                         if result.is_ok() {
                             // Task finished successfully, update the button text
                             button
                                 .set_inner_text("NFT Claimed! You will receive it within 7 days!");
                         } else {
                             // Re-enable the button and show an error message if something goes wrong
-                            button.set_inner_text("Error! Try Again.");
+                            button.set_inner_text("Error! Please Try Again.");
                             button.remove_attribute("disabled").unwrap();
                         }
                     }
@@ -340,7 +325,6 @@ pub fn project_output() -> impl IntoView {
                     <div class="container mx-auto px-5 py-2 lg:px-32 lg:pt-12 space-y-6">
                         <h2 class="mb-4 text-4xl font-semibold">{&chapter.name}</h2>
                         <div class="project" inner_html=&chapter.text></div>
-
 
                             {if section_num() != 0 {
                                 view!{
@@ -367,10 +351,6 @@ pub fn project_output() -> impl IntoView {
                                 }
                             }}
 
-
-
-
-
                             {if chapter.num != 1 {
                                 view!{
                                     <a href={format!("/builds/{}/{}/{}", &project_name(), &section_num(), &chapter.num.saturating_sub(1))}>
@@ -396,10 +376,6 @@ pub fn project_output() -> impl IntoView {
                                 }
                             }}
 
-
-
-
-
                             {if chapter.tweet != None {
                                 view!{
                                     <button
@@ -424,9 +400,6 @@ pub fn project_output() -> impl IntoView {
                                     }
                             }}
 
-
-
-
                                                  {if chapter.final_chapter != true {
                                 view!{
                                     <a href={format!("/builds/{}/{}/{}", &project_name(), &section_num(), &chapter.num + 1)}>
@@ -450,9 +423,6 @@ pub fn project_output() -> impl IntoView {
                                     </a>
                                 }
                             }}
-
-
-
 
                             {if chapter.final_section != true {
                                 view!{
@@ -490,14 +460,6 @@ pub fn project_output() -> impl IntoView {
                                          </button>
                                 </a>
                             }}}
-
-
-
-
-
-
-
-
                     </div>
                 }
             })
