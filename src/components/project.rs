@@ -142,7 +142,9 @@ pub async fn get_project_chapter(
             let path = entry.path();
             if path.is_file() {
                 if let Some(fname) = path.file_name().and_then(|f| f.to_str()) {
-                    file_name = fname.to_string();
+                    let temp_file_name = fname.to_string();
+                    let semi_file_name = str::replace(&temp_file_name, "_", " ");
+                    file_name = semi_file_name.trim_end_matches(".md").to_string();
                     if let Ok(content) = fs::read_to_string(&path) {
                         chapter_text = content;
                     }
@@ -164,7 +166,6 @@ pub async fn get_project_chapter(
     let mut tweet_body: Option<String> = None;
     // Convert markdown to HTML
     let mut options = Options::empty();
-    options.insert(Options::ENABLE_STRIKETHROUGH);
     let parser = Parser::new_ext(&chapter_text, options);
     let mut html_output = String::new();
     pulldown_cmark::html::push_html(&mut html_output, parser);
