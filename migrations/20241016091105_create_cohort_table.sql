@@ -1,4 +1,4 @@
--- Add migration script here
+-- Migration script to add cohorts table
 CREATE TABLE cohorts (
     id SERIAL PRIMARY KEY,
     address VARCHAR(45) NOT NULL,
