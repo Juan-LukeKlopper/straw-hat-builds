@@ -8,6 +8,8 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{console, window};
 use web_sys::{js_sys, wasm_bindgen::JsValue};
 
+use web_sys::MouseEvent;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Chapter {
     pub name: String,
@@ -74,6 +76,10 @@ async fn get_keplr_address() -> Result<String, JsValue> {
 #[server(Test, "/api")]
 pub async fn test(address: String, build: String) -> Result<(), ServerFnError> {
     print!("TEST");
+    println!(
+        "args.address = {:?}\n\nargs.build = {:?}\n\n",
+        address, build
+    );
     use dotenv::dotenv;
     use sqlx::postgres::PgPoolOptions;
     use std::env;
@@ -275,14 +281,30 @@ pub fn project_output() -> impl IntoView {
         },
     );
 
-    let done_handler = move |_| {
+    let done_handler = move |ev: MouseEvent| {
         let project_name = project_name();
+        let button = ev
+            .target()
+            .unwrap()
+            .unchecked_into::<web_sys::HtmlElement>();
+
+        button.set_inner_text("Processing...");
+        button.set_attribute("disabled", "true").unwrap();
         if cfg!(target_arch = "wasm32") {
             spawn_local(async move {
                 match get_keplr_address().await {
                     Ok(address) => {
                         console::log_1(&JsValue::from_str(&format!("Keplr address: {}", address)));
-                        test(address, project_name).await;
+                        let result = test(address, project_name).await;
+                        if result.is_ok() {
+                            // Task finished successfully, update the button text
+                            button
+                                .set_inner_text("NFT Claimed! You will receive it within 7 days!");
+                        } else {
+                            // Re-enable the button and show an error message if something goes wrong
+                            button.set_inner_text("Error! Try Again.");
+                            button.remove_attribute("disabled").unwrap();
+                        }
                     }
                     Err(e) => {
                         console::error_1(&e);
@@ -450,6 +472,7 @@ pub fn project_output() -> impl IntoView {
                                          </button>
                                 </a>
                             }}}
+
 
 
 
