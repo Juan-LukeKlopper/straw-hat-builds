@@ -1,7 +1,6 @@
 use crate::components::project::*;
 use leptos::*;
 
-/// Renders the home page of your application.
 pub fn project() -> impl IntoView {
     view! {
         <div class="w-full bg-gradient-to-r from-purple-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% p-8 text-center ">
