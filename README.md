@@ -19,7 +19,15 @@ Before you embark on this journey, ensure you have the necessary tools on board.
 
 ### **Prerequisites**
 
-- **Rust nightly toolchain:** Make sure Rust's nightly toolchain is installed on your system. If not, you can install it [here](https://www.rust-lang.org/tools/install).
+- **Rust nightly toolchain:** Make sure Rust's nightly toolchain is installed on your system. If not, you can install it [here](https://www.rust-lang.org/tools/install). You can also just run this command to install using Rustup which is the recommended way to do it.
+
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  ```
+
+
+
+
 - **cargo-leptos:** Leptos is the core framework used for this project, and it uses cargo-leptos to run Leptos SSR sites. Install it using Cargo:
 
   ```bash
@@ -27,7 +35,9 @@ Before you embark on this journey, ensure you have the necessary tools on board.
   ```
 
 - **wasm32-unknown-unknown:** wasm32-unknown-unknown is a compilation target which allows us to run the application in the browser.
-
+  ```bash
+  rustup target add wasm32-unknown-unknown
+  ```
 Here is a video demo of the Prerequisites section:
 
 [![asciicast](https://asciinema.org/a/684168.svg)](https://asciinema.org/a/684168)
