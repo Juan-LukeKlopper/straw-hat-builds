@@ -28,6 +28,11 @@ Before you embark on this journey, ensure you have the necessary tools on board.
 
 - **wasm32-unknown-unknown:** wasm32-unknown-unknown is a compilation target which allows us to run the application in the browser.
 
+Here is a video demo of the Prerequisites section:
+
+[![asciicast](https://asciinema.org/a/684168.svg)](https://asciinema.org/a/684168)
+
+
 ### **Installation**
 
 Clone the repository to your local machine:
@@ -60,6 +65,10 @@ cargo leptos watch
 ```
 
 Visit `http://localhost:3000` in your browser to explore the project.
+
+Here is a video of the installation and running process:
+
+[![asciicast](https://asciinema.org/a/sQqhpK5lTGEBbwHCN9ztmPZVc.svg)](https://asciinema.org/a/sQqhpK5lTGEBbwHCN9ztmPZVc)
 
 ### **Building for Production**
 
