@@ -43,6 +43,14 @@ Navigate to the project directory:
 cd straw-hat-builds
 ```
 
+### **Add values into .env**
+
+To add the value into a file using a command it can be done like this:
+
+```bash
+DATABASE_URL="...." > .env
+```
+
 ### **Running the Project**
 
 To set sail and run the project locally:

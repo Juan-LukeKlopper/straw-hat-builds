@@ -91,14 +91,14 @@ pub async fn add_completion_to_db(address: String, build: String) -> Result<(), 
         .await?;
 
     // Try insert data
-    let result = sqlx::query!(
+    let result = sqlx::query(
         r#"
         INSERT INTO cohorts (address, build, tx_hash)
         VALUES ($1, $2, NULL)
         "#,
-        address,
-        build
     )
+    .bind(address)
+    .bind(build)
     .execute(&pool)
     .await;
 
